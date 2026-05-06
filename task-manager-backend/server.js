@@ -18,14 +18,38 @@ const normalizeOrigin = (value) => {
     }
 };
 
-const allowedOrigins = [normalizeOrigin(process.env.CLIENT_URL), "http://localhost:5173"].filter(Boolean);
+const configuredOrigins = [process.env.CLIENT_URL, process.env.CLIENT_URL_ALT]
+    .filter(Boolean)
+    .flatMap((value) => value.split(",").map((item) => item.trim()))
+    .map(normalizeOrigin)
+    .filter(Boolean);
 
-app.use(
-    cors({
-        origin: allowedOrigins,
-        credentials: true,
-    })
-);
+const defaultOrigins = [
+    "http://localhost:5173",
+    "https://taskmanagebyarjun.netlify.app",
+    "https://taskmanagbyarjun.netlify.app",
+];
+
+const allowedOrigins = Array.from(new Set([...configuredOrigins, ...defaultOrigins]));
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (!origin) {
+            return callback(null, true);
+        }
+
+        const normalizedOrigin = normalizeOrigin(origin);
+
+        if (allowedOrigins.includes(normalizedOrigin)) {
+            return callback(null, true);
+        }
+
+        return callback(new Error(`Not allowed by CORS: ${origin}`));
+    },
+    credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Middleware to check DB connection status
