@@ -2,9 +2,20 @@ const mongoose = require("mongoose");
 
 let isConnected = false;
 
+const getMongoUri = () => {
+    return process.env.MONGO_URI || process.env.MONGODB_URI || process.env.DATABASE_URL || "";
+};
+
 const connectDB = async () => {
+    const mongoUri = getMongoUri();
+
+    if (!mongoUri) {
+        isConnected = false;
+        throw new Error("Missing MongoDB connection string. Set MONGO_URI, MONGODB_URI, or DATABASE_URL in Railway.");
+    }
+
     try {
-        const conn = await mongoose.connect(process.env.MONGO_URI);
+        const conn = await mongoose.connect(mongoUri);
         isConnected = true;
         console.log(`MongoDB connected: ${conn.connection.host}`);
     } catch (error) {
