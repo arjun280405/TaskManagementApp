@@ -8,7 +8,17 @@ connectDB();
 
 const app = express();
 
-const allowedOrigins = [process.env.CLIENT_URL, "http://localhost:5173"].filter(Boolean);
+const normalizeOrigin = (value) => {
+    if (!value) return null;
+
+    try {
+        return new URL(value).origin;
+    } catch (error) {
+        return value;
+    }
+};
+
+const allowedOrigins = [normalizeOrigin(process.env.CLIENT_URL), "http://localhost:5173"].filter(Boolean);
 
 app.use(
     cors({
